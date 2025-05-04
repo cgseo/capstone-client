@@ -72,6 +72,7 @@ public class RecodeActivity extends AppCompatActivity {
         dataContainer.removeAllViews();
         String dateString = dateOnlyFormatter.format(selectedDate);
         // 실제 서버 연동 (실제 서버 오픈시 이 부분 사용)
+
         Call<List<NoiseLog>> call = noiseLogApi.getNoiseLogsByDate(dateString);
         call.enqueue(new Callback<List<NoiseLog>>() {
             @Override
@@ -88,6 +89,7 @@ public class RecodeActivity extends AppCompatActivity {
                 showMessage("네트워크 오류: " + t.getMessage());
             }
         });
+
     }
 
     // 소음 측정 기록 열람
