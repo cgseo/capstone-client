@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
+        android:textSize="20dp"
+        android:text="그룹명"/>
+
+    <EditText
+        android:id="@+id/edtGroupName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
+        android:textSize="20dp"
+        android:text="그룹 설명"/>
+
+    <EditText
+        android:id="@+id/edtGroupDesc"
+        android:layout_width="match_parent"
+        android:layout_height="169dp"
+        android:hint="30자 이내 작성"
+        android:maxLength="30"
+        android:background="@android:drawable/editbox_background_normal" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
+        android:textSize="20dp"
+        android:text="닉네임"/>
+
+    <EditText
+        android:id="@+id/edtGroupNickname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="" />
+
+</LinearLayout>

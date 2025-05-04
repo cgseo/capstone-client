@@ -48,8 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
         btnGroup.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "업데이트 예정", Toast.LENGTH_SHORT).show();
+            public void onClick(View view) { // 새창 GroupActivity.java
+                Intent intent = new Intent(getApplicationContext(),GroupActivity.class);
+                startActivity(intent);
             }
         });
     }
