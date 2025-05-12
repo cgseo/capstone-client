@@ -28,10 +28,10 @@ public class GroupAdapter extends ArrayAdapter<Group> {
             convertView = LayoutInflater.from(context).inflate(R.layout.item_group, parent, false);
         }
 
-        TextView nameView = convertView.findViewById(R.id.textGroupName);
+        TextView groupNameView = convertView.findViewById(R.id.textGroupName);
         TextView descView = convertView.findViewById(R.id.textGroupDesc);
 
-        nameView.setText(group.getName());
+        groupNameView.setText(group.getGroup_name());
         descView.setText(group.getDescription());
 
         return convertView;

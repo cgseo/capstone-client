@@ -1,28 +1,25 @@
 package com.example.soundwatch;
 
-import com.google.gson.annotations.SerializedName;
-
 public class Group {
 
     private String id;
-    private String name;
+    private String group_name;
     private String description;
-    @SerializedName("invite_code")
-    private String inviteCode;
+    private String invite_code;
 
-    public Group(String id, String name, String description, String inviteCode) {
+    public Group(String id, String group_name, String description, String invite_code) {
         this.id = id;
-        this.name = name;
+        this.group_name = group_name;
         this.description = description;
-        this.inviteCode = inviteCode;
+        this.invite_code = invite_code;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getGroup_name() {
+        return group_name;
     }
 
     public String getDescription() {
@@ -30,12 +27,12 @@ public class Group {
     }
 
     public String getInviteCode(){
-        return inviteCode;
+        return invite_code;
     }
 
     @Override
     public String toString() {
-        return name + " | " + description;
+        return group_name + " | " + description;
     }
 
     /* 초대 코드 생성을 위해 문자와 숫자를 무작위로 배열한 6자리 문장 출력, 서버에서 처리할 수 있도록 조치 요망.

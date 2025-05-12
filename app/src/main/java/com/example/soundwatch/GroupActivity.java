@@ -27,7 +27,7 @@ import okhttp3.Response;
 
 public class GroupActivity extends AppCompatActivity {
 
-    private int userID;
+    private int userId;
     private ArrayList<Group> groupList;
     private GroupAdapter adapter;
     private ListView groupListView;
@@ -50,14 +50,14 @@ public class GroupActivity extends AppCompatActivity {
         Button btnJoinGroup = findViewById(R.id.btnJoinGroup);
         btnJoinGroup.setOnClickListener(v -> showJoinGroupDialog());
 
-        // 그룹 리스트 클릭 시 새 창 GroupPageActivity.java로 이동, 그룹 id, 이름, 초대 코드, 유저 ID? 전달(임의로 선정, 서버 구축 후 변경 가능성 있음)
+        // 그룹 리스트 클릭 시 새 창 GroupPageActivity.java로 이동, 그룹 id 전달(임의로 선정, 서버 구축 후 변경 가능성 있음)
         groupListView.setOnItemClickListener((parent, view, position, id) -> {
             Group selectedGroup = groupList.get(position);
             Intent intent = new Intent(GroupActivity.this, GroupPageActivity.class);
             intent.putExtra("groupId", selectedGroup.getId());
-            intent.putExtra("groupName", selectedGroup.getName());
-            intent.putExtra("inviteCode", selectedGroup.getInviteCode());
-            // intent.putExtra("userID",userID);
+            intent.putExtra("groupName", selectedGroup.getGroup_name());
+            //intent.putExtra("invite_code", selectedGroup.getInviteCode());
+            intent.putExtra("userId",userId);
             startActivity(intent);
         });
 
@@ -66,7 +66,7 @@ public class GroupActivity extends AppCompatActivity {
 
     private void fetchGroupsFromServer() {
         Request request = new Request.Builder()
-                .url(serverUrl + "/groups")
+                .url(serverUrl + "/api/group/groupList") // 본인이 속한 그룹 조회 API
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -86,10 +86,10 @@ public class GroupActivity extends AppCompatActivity {
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject jsonObject = jsonArray.getJSONObject(i);
                             String id = jsonObject.getString("id");
-                            String name = jsonObject.getString("name");
+                            String group_name = jsonObject.getString("group_name");
                             String description = jsonObject.getString("description");
-                            String inviteCode = jsonObject.getString("inviteCode");
-                            groupList.add(new Group(id, name, description, inviteCode));
+                            String inviteCode = jsonObject.getString("invite_code");
+                            groupList.add(new Group(id, group_name, description, inviteCode));
                         }
                         runOnUiThread(() -> adapter.notifyDataSetChanged());
                     } catch (Exception e) {
@@ -108,28 +108,28 @@ public class GroupActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_create_group, null);
         EditText edtGroupName = dialogView.findViewById(R.id.edtGroupName);
         EditText edtGroupDesc = dialogView.findViewById(R.id.edtGroupDesc);
-        EditText edtGroupNickname = dialogView.findViewById(R.id.edtGroupNickname);
+        EditText edtUsername = dialogView.findViewById(R.id.edtUsername);
 
         new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton("생성", (dialog, which) -> {
-                    String name = edtGroupName.getText().toString();
+                    String group_name = edtGroupName.getText().toString();
                     String desc = edtGroupDesc.getText().toString();
-                    String nickname = edtGroupNickname.getText().toString();
+                    String name = edtUsername.getText().toString();
                     // 그룹 이름과 설명, 닉네임을 서버(/groups)에 전송하고 서버에게 그룹 생성을 요청
-                    createGroupOnServer(name, desc, nickname);
+                    createGroupOnServer(group_name, desc, name);
                 })
                 .setNegativeButton("취소", null)
                 .show();
     }
 
-    private void createGroupOnServer(String name, String description, String nickname) {
+    private void createGroupOnServer(String group_name, String description, String name) {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("name", name);
+            jsonBody.put("group_name", group_name);
             jsonBody.put("description", description);
-            jsonBody.put("nickname", nickname);
+            jsonBody.put("name", name);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류: " + e.getMessage());
             return;
@@ -137,7 +137,7 @@ public class GroupActivity extends AppCompatActivity {
         RequestBody requestBody = RequestBody.create(JSON, jsonBody.toString());
 
         Request request = new Request.Builder()
-                .url(serverUrl + "/groups")
+                .url(serverUrl + "/api/group/insertGroup") // 그룹 생성 API 주소 변경
                 .post(requestBody)
                 .build();
 
@@ -171,26 +171,26 @@ public class GroupActivity extends AppCompatActivity {
     private void showJoinGroupDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_join_group, null);
         EditText edtInviteCode = dialogView.findViewById(R.id.edtJoinInviteCode);
-        EditText edtNickname = dialogView.findViewById(R.id.edtJoinNickname);
+        EditText edtName = dialogView.findViewById(R.id.edtJoinName);
 
         new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton("가입", (dialog, which) -> {
                     String inviteCode = edtInviteCode.getText().toString();
-                    String nickname = edtNickname.getText().toString();
+                    String name = edtName.getText().toString();
                     // 서버(/groups/join)로 초대 코드와 닉네임을 전달하여, 서버에서 사용자가 그룹에 가입할 수 있도록 처리,
-                    joinGroupOnServer(inviteCode, nickname);
+                    joinGroupOnServer(inviteCode, name);
                 })
                 .setNegativeButton("취소", null)
                 .show();
     }
 
-    private void joinGroupOnServer(String inviteCode, String nickname) {
+    private void joinGroupOnServer(String inviteCode, String name) {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("inviteCode", inviteCode);
-            jsonBody.put("nickname", nickname);
+            jsonBody.put("name", name);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류 (가입): " + e.getMessage());
             return;
