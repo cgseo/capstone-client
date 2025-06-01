@@ -9,6 +9,15 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:textAlignment="center"
+        android:textSize="24dp"
+        android:textStyle="bold"
+        android:textColor="#800080"
+        android:text="변경하고 싶은 정보를 입력해주세요."/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
         android:textSize="20dp"
         android:text="그룹명"/>
 
@@ -33,17 +42,5 @@
         android:maxLength="30"
         android:background="@android:drawable/editbox_background_normal" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:textAlignment="center"
-        android:textSize="20dp"
-        android:text="닉네임"/>
-
-    <EditText
-        android:id="@+id/edtUserName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="" />
 
 </LinearLayout>

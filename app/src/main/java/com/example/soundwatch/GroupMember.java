@@ -6,9 +6,7 @@ public class GroupMember {
     private String userId;
     private Long joined_at;
     private boolean is_owner;
-    private boolean active; // 그룹 멤버의 활성화 여부
-    private double decibel; // 그룹 멥버의 현재 데시벨
-    private String name; // 그룹 멤버의 이름
+    private String nickname; // 그룹 멤버의 이름
 
     public String getId() {
         return Id;
@@ -43,27 +41,12 @@ public class GroupMember {
         this.is_owner = is_owner;
     }
 
-    public boolean getActive() {
-        return active;
+
+    public String getNickname() {
+        return nickname;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public double getDecibel() {
-        return decibel;
-    }
-
-    public void setDecibel(double decibel) {
-        this.decibel = decibel;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 }

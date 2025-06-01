@@ -22,12 +22,12 @@
         android:layout_marginTop="30dp"
         android:id="@+id/btnMesureStart" />
 
-    <ImageView
-        android:layout_width="300dp"
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart"
+        android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:id="@+id/imgGraph"
         android:layout_gravity="center"
-        android:layout_marginTop="40dp"
-        android:src="@drawable/ic_launcher_background" />
+        android:layout_marginTop="40dp" />
+
 
 </LinearLayout>

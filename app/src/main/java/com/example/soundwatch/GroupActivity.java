@@ -1,5 +1,6 @@
 package com.example.soundwatch;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import android.app.AlertDialog;
@@ -27,17 +28,32 @@ import okhttp3.Response;
 
 public class GroupActivity extends AppCompatActivity {
 
-    private int userId;
+    private String userId;
     private ArrayList<Group> groupList;
     private GroupAdapter adapter;
     private ListView groupListView;
     private OkHttpClient client = new OkHttpClient();
     private String serverUrl = "http://10.0.2.2:3000";
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group);
+
+        prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        // SharedPreferences에서 userId 불러오기, userId가 없으면 null 반환
+        userId = prefs.getString("userId", null);
+
+        // userId가 null인 경우 (로그인되지 않은 상태) 처리
+        if (userId == null) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_LONG).show();
+            // 로그인 화면으로 강제 이동
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         groupList = new ArrayList<>();
         groupListView = findViewById(R.id.groupListView);
@@ -56,7 +72,6 @@ public class GroupActivity extends AppCompatActivity {
             Intent intent = new Intent(GroupActivity.this, GroupPageActivity.class);
             intent.putExtra("groupId", selectedGroup.getId());
             intent.putExtra("groupName", selectedGroup.getGroup_name());
-            //intent.putExtra("invite_code", selectedGroup.getInviteCode());
             intent.putExtra("userId",userId);
             startActivity(intent);
         });
@@ -66,7 +81,7 @@ public class GroupActivity extends AppCompatActivity {
 
     private void fetchGroupsFromServer() {
         Request request = new Request.Builder()
-                .url(serverUrl + "/api/group/groupList") // 본인이 속한 그룹 조회 API
+                .url(serverUrl + "/api/group/groupList?userId=" + userId) // 본인이 속한 그룹 조회 API
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -108,28 +123,29 @@ public class GroupActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_create_group, null);
         EditText edtGroupName = dialogView.findViewById(R.id.edtGroupName);
         EditText edtGroupDesc = dialogView.findViewById(R.id.edtGroupDesc);
-        EditText edtUsername = dialogView.findViewById(R.id.edtUsername);
+        EditText edtNickname = dialogView.findViewById(R.id.edtUserName);
 
         new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton("생성", (dialog, which) -> {
                     String group_name = edtGroupName.getText().toString();
                     String desc = edtGroupDesc.getText().toString();
-                    String name = edtUsername.getText().toString();
+                    String nickname = edtNickname.getText().toString();
                     // 그룹 이름과 설명, 닉네임을 서버(/groups)에 전송하고 서버에게 그룹 생성을 요청
-                    createGroupOnServer(group_name, desc, name);
+                    createGroupOnServer(group_name, desc, nickname);
                 })
                 .setNegativeButton("취소", null)
                 .show();
     }
 
-    private void createGroupOnServer(String group_name, String description, String name) {
+    private void createGroupOnServer(String group_name, String description, String nickname) {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("group_name", group_name);
             jsonBody.put("description", description);
-            jsonBody.put("name", name);
+            jsonBody.put("user_id",userId);
+            jsonBody.put("nickname", nickname);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류: " + e.getMessage());
             return;
@@ -171,26 +187,27 @@ public class GroupActivity extends AppCompatActivity {
     private void showJoinGroupDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_join_group, null);
         EditText edtInviteCode = dialogView.findViewById(R.id.edtJoinInviteCode);
-        EditText edtName = dialogView.findViewById(R.id.edtJoinName);
+        EditText edtName = dialogView.findViewById(R.id.edtNickName);
 
         new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton("가입", (dialog, which) -> {
                     String inviteCode = edtInviteCode.getText().toString();
-                    String name = edtName.getText().toString();
+                    String nickname = edtName.getText().toString();
                     // 서버(/groups/join)로 초대 코드와 닉네임을 전달하여, 서버에서 사용자가 그룹에 가입할 수 있도록 처리,
-                    joinGroupOnServer(inviteCode, name);
+                    joinGroupOnServer(inviteCode, nickname);
                 })
                 .setNegativeButton("취소", null)
                 .show();
     }
 
-    private void joinGroupOnServer(String inviteCode, String name) {
+    private void joinGroupOnServer(String inviteCode, String nickname) {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("inviteCode", inviteCode);
-            jsonBody.put("name", name);
+            jsonBody.put("invite_code", inviteCode);
+            jsonBody.put("user_id", userId);
+            jsonBody.put("nickname", nickname);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류 (가입): " + e.getMessage());
             return;
@@ -198,7 +215,7 @@ public class GroupActivity extends AppCompatActivity {
         RequestBody requestBody = RequestBody.create(JSON, jsonBody.toString());
 
         Request request = new Request.Builder()
-                .url(serverUrl + "/groups/join")
+                .url(serverUrl + "/groups/join/nickname")
                 .post(requestBody)
                 .build();
 

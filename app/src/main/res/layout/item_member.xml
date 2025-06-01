@@ -27,6 +27,7 @@
         android:layout_marginBottom="4dp"
         android:contentDescription="상태 아이콘" />
 
+
     <TextView
         android:id="@+id/txtDecibel"
         android:layout_width="wrap_content"

@@ -3,6 +3,7 @@ package com.example.soundwatch;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,10 +23,23 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+// 그래프를 위한 import
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 
 public class MesureDecibel extends MainActivity {
 
@@ -46,6 +60,13 @@ public class MesureDecibel extends MainActivity {
     private String currentLocation = "위치 정보 없음";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
     private NoiseLogApi noiseLogApi;
+
+    // 그래프를 위한 변수
+    private LineChart lineChart;
+    private LineDataSet lineDataSet;
+    private LineData lineData;
+    private int xIndex = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +104,32 @@ public class MesureDecibel extends MainActivity {
         } else {
             requestLocationUpdates();
         }
+
+        lineChart = findViewById(R.id.chart);
+        lineDataSet = new LineDataSet(new ArrayList<>(), "최대 데시벨");
+        lineDataSet.setColor(Color.BLACK);
+        lineDataSet.setDrawCircles(false);
+        lineDataSet.setLineWidth(2f);
+
+        lineData = new LineData(lineDataSet);
+        lineChart.setData(lineData);
+
+        // 그래프 설정
+        lineChart.getDescription().setEnabled(false);
+        lineChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
+        lineChart.getAxisRight().setEnabled(false);
+        lineChart.getLegend().setEnabled(false);
+        lineChart.getAxisLeft().setDrawLabels(false);
+
+        YAxis yAxis = lineChart.getAxisLeft();
+        yAxis.setAxisMinimum(0f);    // 그래프의 최소 데시벨
+        yAxis.setAxisMaximum(120f);  // 그래프의 최대 데시벨
+
+        XAxis xAxis = lineChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setGranularity(1f); // 초 단위로 간격 고정
+        xAxis.setLabelRotationAngle(-45f); // 라벨이 겹치지 않게
 
 
         btnMesureStart.setOnClickListener(new View.OnClickListener() {
@@ -137,6 +184,11 @@ public class MesureDecibel extends MainActivity {
         startTime = new Timestamp(System.currentTimeMillis()); // 측정 시작 시간 기록
         maxDecibel = 0.0; // 최대 데시벨
 
+        // 그래프 x축을 위해 초 단위 시간 기록
+        long startTimeMillis = System.currentTimeMillis();
+        lineChart.getXAxis().setValueFormatter(new TimeAxisValueFormatter(startTimeMillis));
+
+
 
         Thread recordingThread = new Thread(() -> {
             short[] buffer = new short[bufferSize];
@@ -159,7 +211,16 @@ public class MesureDecibel extends MainActivity {
 
                 decibelText = (TextView) findViewById(R.id.txtNowdB);
                 double finalDecibel = decibel; //최종 데시벨 값
-                uiHandler.post(() -> decibelText.setText(String.format("%.2f dB", finalDecibel)));
+                uiHandler.post(() -> {
+                    decibelText.setText(String.format("%.2f dB", finalDecibel));
+
+                    // 그래프에 새 데이터 추가
+                    lineData.addEntry(new Entry(xIndex++, (float) finalDecibel), 0);
+                    lineData.notifyDataChanged();
+                    lineChart.notifyDataSetChanged();
+                    lineChart.setVisibleXRangeMaximum(20); // 한 화면에 최대 20개 점
+                    lineChart.moveViewToX(lineData.getEntryCount());
+                });
 
                 try {
                     Thread.sleep(200);
@@ -226,6 +287,26 @@ public class MesureDecibel extends MainActivity {
             }
         });
     }
+
+    // 그래프 x축 시간 설정
+    public class TimeAxisValueFormatter extends ValueFormatter {
+        private final long startTimeMillis;
+
+        public TimeAxisValueFormatter(long startTimeMillis) {
+            this.startTimeMillis = startTimeMillis;
+        }
+
+        @Override
+        public String getFormattedValue(float value) {
+            long millisOffset = (long) value * 1000L; // X값은 초 단위로 가정
+            long timeMillis = startTimeMillis + millisOffset;
+
+            SimpleDateFormat sdf = new SimpleDateFormat("mm:ss", Locale.getDefault());
+            return sdf.format(new Date(timeMillis));
+        }
+    }
+
+
     @Override
     protected void onDestroy() { //화면 종료 or 앱 종료 시
         super.onDestroy();

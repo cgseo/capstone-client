@@ -8,16 +8,37 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <ImageButton
-        android:id="@+id/btnSettings"
-        android:layout_width="50dp"
-        android:layout_height="47dp"
-        android:layout_gravity="right"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/app_name"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/ic_settings" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="left"
+            android:text="로그인"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#2EAB67"
+            android:layout_marginBottom="16dp"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="50dp"
+            android:layout_height="47dp"
+            android:layout_gravity="right"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/app_name"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_settings" />
+    </LinearLayout>
+
 
     <ImageView
         android:layout_width="300dp"

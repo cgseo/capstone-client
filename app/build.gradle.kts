@@ -41,6 +41,7 @@ dependencies {
     implementation ("com.squareup.retrofit2:retrofit:2.9.0") // retrofit 의존성 추가
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0") // JSON 변환에 필요 (Gson 사용 시)
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3") // 로깅 인터셉터
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0") // 실시간 소음 데이터 그래프 API
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
