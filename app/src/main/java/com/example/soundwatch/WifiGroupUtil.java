@@ -47,11 +47,18 @@ public class WifiGroupUtil {
                     }
                     reader.close();
 
+
+                    // 해당 wifi로 가입된 그룹이 없는 경우 groupId: null
+                    if(response == null || response.toString().trim().isEmpty() ){
+                        prefs.edit().remove("groupId").apply();
+                        Log.d("wifi_service", "groupId: "+prefs.getString("groupId", null));
+                        return;
+                    }
+
                     // JSON 파싱
                     JSONObject json = new JSONObject(response.toString());
                     String groupId = json.optString("group_id", null);  // int면 optInt 사용 가능
 
-                    if (groupId == null) return;
 
                     prefs.edit().putString("groupId", groupId).apply();
                     Log.d("wifi_service", "groupId: "+prefs.getString("groupId", null));

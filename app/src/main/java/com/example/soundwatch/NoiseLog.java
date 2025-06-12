@@ -21,7 +21,7 @@ import java.sql.Timestamp;
         private int userId; // 사용자 ID 추가
 
         @SerializedName("group_id")
-        private int groupId; // 그룹 ID 추가
+        private String groupId; // 그룹 ID 추가
 
 
         public int getId() {
@@ -84,9 +84,9 @@ import java.sql.Timestamp;
         this.userId = userId;
     }
 
-    public int getGroupId() {return groupId;}
+    public String getGroupId() {return groupId;}
 
-    public void setGroupId(int groupId) { this.groupId = groupId; }
+    public void setGroupId(String groupId) { this.groupId = groupId; }
 
     @Override
     public String toString() {

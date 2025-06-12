@@ -2,6 +2,7 @@ package com.example.soundwatch;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -263,7 +264,16 @@ public class MesureDecibel extends MainActivity {
         noiseLog.setEndTime(endTime);   // 측정 종료 시간
         noiseLog.setLocation(currentLocation); // 현재 위치 정보
         noiseLog.setMaxDb(maxDecibel); // 최대 데시벨 크기
-        noiseLog.setUserId(1); // 임시 사용자 ID
+
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        String userId = prefs.getString("userId", null);
+        if(userId != null){
+            noiseLog.setUserId(Integer.parseInt(userId)); // 사용자 ID
+        }
+
+        noiseLog.setGroupId(prefs.getString("groupId", null));
+
+        Log.d("nosie_log", prefs.getString("userId", null)+ " "+prefs.getString("groupId", null));
 
         // 서버에 소음 데이터를 저장하는 API 호출
         Call<Integer> call = noiseLogApi.insertNoiseLog(noiseLog);

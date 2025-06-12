@@ -10,8 +10,8 @@ public class GroupMember {
     private boolean is_owner;
     private String nickname; // 그룹 멤버의 이름
 
-    @SerializedName("wifi_bbsid")
-    private String wifiBbsid;
+    @SerializedName("wifi_bssid")
+    private String wifiBssid;
 
     public String getId() {
         return Id;
@@ -55,6 +55,6 @@ public class GroupMember {
         this.nickname = nickname;
     }
 
-    public String getWifiBbsid() { return  wifiBbsid; }
-    public  void setWifiBbsid(String wifiBbsid) { this.wifiBbsid = wifiBbsid; }
+    public String getWifiBssid() { return  wifiBssid; }
+    public  void setWifiBssid(String wifiBssid) { this.wifiBssid = wifiBssid; }
 }
