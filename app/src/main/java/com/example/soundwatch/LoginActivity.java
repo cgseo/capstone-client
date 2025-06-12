@@ -1,8 +1,13 @@
 package com.example.soundwatch;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -11,7 +16,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -93,15 +101,23 @@ public class LoginActivity extends AppCompatActivity {
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String responseBody = response.body().string();
+
                         try {
                             JSONObject result = new JSONObject(responseBody);
-                            String userId = result.getString("userId");
-
+                            String userId = result.getString("id");
+                            Log.d("Login_activity", userId);
                             // userId을 SharedPreferences에 저장
                             prefs.edit().putString("userId", userId).apply();
 
                             runOnUiThread(() -> {
                                 Toast.makeText(LoginActivity.this, "로그인 성공", Toast.LENGTH_SHORT).show();
+
+                                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                                String bssid = wifiInfo.getBSSID();
+
+                                WifiGroupUtil.sendHttp(LoginActivity.this, bssid);
+
                                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                 startActivity(intent);
                                 finish();

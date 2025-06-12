@@ -1,5 +1,7 @@
 package com.example.soundwatch;
 
+import com.google.gson.annotations.SerializedName;
+
 public class GroupMember {
     private String Id;
     private String groupId;
@@ -7,6 +9,9 @@ public class GroupMember {
     private Long joined_at;
     private boolean is_owner;
     private String nickname; // 그룹 멤버의 이름
+
+    @SerializedName("wifi_bbsid")
+    private String wifiBbsid;
 
     public String getId() {
         return Id;
@@ -49,4 +54,7 @@ public class GroupMember {
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
+
+    public String getWifiBbsid() { return  wifiBbsid; }
+    public  void setWifiBbsid(String wifiBbsid) { this.wifiBbsid = wifiBbsid; }
 }
