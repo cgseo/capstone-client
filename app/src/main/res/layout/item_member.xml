@@ -15,24 +15,24 @@
         android:id="@+id/txtName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="멤버 이름"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginBottom="4dp" />
 
     <ImageView
         android:id="@+id/imgStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginBottom="4dp"
-        android:contentDescription="상태 아이콘" />
-
+        android:contentDescription="상태 아이콘"
+        android:scaleType="fitCenter" />
 
     <TextView
         android:id="@+id/txtDecibel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:text="50dB"
         android:textSize="16sp"
         android:textColor="#333333" />
 

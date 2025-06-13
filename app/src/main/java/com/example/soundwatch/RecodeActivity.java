@@ -1,5 +1,7 @@
 package com.example.soundwatch;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -36,6 +38,7 @@ public class RecodeActivity extends AppCompatActivity {
     private TextView selectDateTextView; // 날짜 선택
     private LinearLayout dataContainer; // 로그들을 동적으로 표시
     private NoiseLogApi noiseLogApi; // 서버와 통신 인터페이스
+    private String userId; // 사요자 ID
     // 날짜 형식
     private SimpleDateFormat dateOnlyFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
@@ -51,6 +54,20 @@ public class RecodeActivity extends AppCompatActivity {
         selectDateTextView = findViewById(R.id.selectDateTextView);
         dataContainer = findViewById(R.id.dataContainer);
         noiseLogApi = RetrofitClient.getApiService();
+
+        SharedPreferences prefs = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        // SharedPreferences에서 userId 불러오기, userId가 없으면 null 반환
+        userId = prefs.getString("userId", null);
+
+        // userId가 null인 경우 (로그인되지 않은 상태) 처리
+        if (userId == null) {
+            Toast.makeText(this, "로그인이 필요합니다.", Toast.LENGTH_LONG).show();
+            // 로그인 화면으로 강제 이동
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         calendarView.setOnDateChangedListener(new OnDateSelectedListener() {
             @Override
@@ -73,7 +90,12 @@ public class RecodeActivity extends AppCompatActivity {
         String dateString = dateOnlyFormatter.format(selectedDate);
         // 실제 서버 연동 (실제 서버 오픈시 이 부분 사용)
 
-        Call<List<NoiseLog>> call = noiseLogApi.getNoiseLogsByDate(dateString);
+        if (userId == null) {
+            showMessage("사용자 ID가 없어 소음 데이터를 로드할 수 없습니다.");
+            return;
+        }
+
+        Call<List<NoiseLog>> call = noiseLogApi.getNoiseLogsByDate(userId, dateString);
         call.enqueue(new Callback<List<NoiseLog>>() {
             @Override
             public void onResponse(Call<List<NoiseLog>> call, Response<List<NoiseLog>> response) {

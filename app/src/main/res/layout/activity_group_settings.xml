@@ -43,15 +43,22 @@
         app:layout_constraintVertical_bias="0.234" />
 
     <TextView
+        android:id="@+id/tvInviteCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/green_border_background"
         android:contentDescription="초대코드"
+        android:gravity="center"
+        android:padding="16dp"
         android:text=""
+        android:textColor="#008000"
+        android:textSize="24sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.294" />
+        app:layout_constraintVertical_bias="0.353" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

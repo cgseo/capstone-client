@@ -1,10 +1,12 @@
 package com.example.soundwatch;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -15,6 +17,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.gson.Gson;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -27,6 +32,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class GroupSettingsActivity extends AppCompatActivity {
 
@@ -35,10 +41,12 @@ public class GroupSettingsActivity extends AppCompatActivity {
     private boolean is_Owner = false;
     private OkHttpClient client = new OkHttpClient();
     private String serverUrl = "http://10.0.2.2:3000";
+    private Group group; // 그룹 정보
 
     private Button btnOut;
     private Button btnDeleteGroup;
     private Button btnUpdateInfoGroup;
+    private TextView textInviteCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +60,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
         btnOut = findViewById(R.id.btnOut);
         btnDeleteGroup = findViewById(R.id.btnDeleteGroup);
         btnUpdateInfoGroup = findViewById(R.id.btnUpdateInfoGroup);
+        textInviteCode = findViewById(R.id.tvInviteCode);
 
         // 초기에 모든 버튼 숨김 처리(생성자 확인 후 표시)
         btnOut.setVisibility(View.GONE);
@@ -59,6 +68,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
         btnUpdateInfoGroup.setVisibility(View.GONE);
 
         checkIfOwner(); // 액티비티 생성 시 그룹 생성자인지 확인
+        fetchGroupInfo(groupId); // 그룹 정보 가져오기
 
         btnOut.setOnClickListener(v -> showOutDialog());
         btnDeleteGroup.setOnClickListener(v -> showDeleteGroupDialog());
@@ -137,6 +147,76 @@ public class GroupSettingsActivity extends AppCompatActivity {
         });
     }
 
+    // 그룹 정보 가져오기
+    private void fetchGroupInfo(String groupId) {
+        if (groupId == null) {
+            Log.e("GroupSettingsActivity", "그룹 ID가 null이어서 그룹 정보를 가져올 수 없습니다.");
+            return;
+        }
+
+        HttpUrl url = HttpUrl.parse(serverUrl + "/api/group/info")
+                .newBuilder()
+                .addQueryParameter("id", groupId)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    try (ResponseBody responseBody = response.body()) {
+                        String jsonResponse = responseBody.string();
+                        Gson gson = new Gson();
+                        group = gson.fromJson(jsonResponse, Group.class);
+
+                        runOnUiThread(() -> {
+
+                            if (group != null && group.getInviteCode() != null) {
+                                textInviteCode.setText("초대 코드: " + group.getInviteCode());
+                                Log.d("GroupSettingsActivity", "그룹 정보 로드 성공: " + group.hashCode() + ", 초대 코드: " + group.getInviteCode());
+                            } else {
+                                textInviteCode.setText("초대 코드: (데이터 오류)");
+                                Log.e("GroupSettingsActivity", "그룹 정보 로드 성공했지만 데이터가 불완전합니다.");
+                            }
+                        });
+                    } catch (IOException e) {
+                        Log.e("GroupSettingsActivity", "응답 본문 읽기 오류: " + e.getMessage());
+                        runOnUiThread(() -> {
+                            Toast.makeText(GroupSettingsActivity.this, "데이터 처리 오류: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            textInviteCode.setText("초대 코드: (데이터 오류)");
+                        });
+                    } catch (com.google.gson.JsonSyntaxException e) {
+                        Log.e("GroupSettingsActivity", "JSON 파싱 오류: " + e.getMessage());
+                        runOnUiThread(() -> {
+                            Toast.makeText(GroupSettingsActivity.this, "데이터 형식 오류: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            textInviteCode.setText("초대 코드: (파싱 오류)");
+                        });
+                    }
+                } else {
+                    Log.e("GroupSettingsActivity", "그룹 정보 로드 실패: " + response.code() + " - " + response.message());
+                    runOnUiThread(() -> {
+                        Toast.makeText(GroupSettingsActivity.this, "그룹 정보 로드 실패: " + response.code(), Toast.LENGTH_SHORT).show();
+                        textInviteCode.setText("초대 코드: (로드 실패)");
+                    });
+                }
+            }
+
+            // 네트워크 요청 자체가 실패한 경우 (예: 서버에 연결할 수 없음)
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e("GroupSettingsActivity", "그룹 정보 요청 실패: " + e.getMessage());
+                runOnUiThread(() -> {
+                    Toast.makeText(GroupSettingsActivity.this, "네트워크 오류: 그룹 정보 로드 실패", Toast.LENGTH_SHORT).show();
+                    textInviteCode.setText("초대 코드: (네트워크 오류)"); // 실패 시 메시지
+                });
+            }
+        });
+    }
+
     private void showOutDialog() {
         if (is_Owner) { // 다시 한번 소유자 여부 확인
             Toast.makeText(this, "퇴실 권한이 없습니다.", Toast.LENGTH_SHORT).show();
@@ -179,47 +259,33 @@ public class GroupSettingsActivity extends AppCompatActivity {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_group, null);
         EditText edtGroupName = dialogView.findViewById(R.id.edtGroupName);
         EditText edtGroupDesc = dialogView.findViewById(R.id.edtGroupDesc);
+        edtGroupName.setText(group.getGroup_name());
+        edtGroupDesc.setText(group.getDescription() != null ? group.getDescription() : "");
 
         new android.app.AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setPositiveButton("수정", (dialog, which) -> {
                     String group_name = edtGroupName.getText().toString();
                     String desc = edtGroupDesc.getText().toString();
-                    updateInfoGroupOnServer(group_name, desc);
+                    try {
+                        updateInfoGroupOnServer(group_name, desc);
+                    } catch (JSONException e) {
+                        Log.e("GroupSettingsActivity", "그룹 정보 수정 JSON 생성 오류: " + e.getMessage());
+                        Toast.makeText(GroupSettingsActivity.this, "그룹 정보 수정 요청 오류 발생", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .setNegativeButton("취소", null)
                 .show();
     }
 
     // 그룹 정보 수정 시 비어 있지 않은 값만 전송
-    private void updateInfoGroupOnServer(String group_name, String description) {
+    private void updateInfoGroupOnServer(String group_name, String description) throws JSONException {
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
         JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("id", groupId);
-
-            // group_name이 비어있지 않으면 추가
-            if (!group_name.isEmpty()) {
-                jsonObject.put("group_name", group_name);
-            }
-
-            // description이 비어있지 않으면 추가
-            if (!description.isEmpty()) {
-                jsonObject.put("description", description);
-            }
-
-            // 만약 group_name과 description 모두 비어있다면, 수정할 내용이 없음을 알림
-            if (jsonObject.length() <= 1) { // "id"만 있는 경우
-                Toast.makeText(GroupSettingsActivity.this, "수정할 그룹 이름 또는 설명을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(GroupSettingsActivity.this, "JSON 생성 오류", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        jsonObject.put("id", groupId.trim());
+        jsonObject.put("group_name", group_name);
+        jsonObject.put("description", description);
 
         RequestBody requestBody = RequestBody.create(jsonObject.toString(), JSON);
 
@@ -231,20 +297,33 @@ public class GroupSettingsActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e("GroupActivity", "그룹 정보 수정 실패: " + e.getMessage());
+                Log.e("GroupSettingsActivity", "그룹 정보 수정 실패: " + e.getMessage());
                 runOnUiThread(() -> Toast.makeText(GroupSettingsActivity.this, "네트워크 오류 발생", Toast.LENGTH_SHORT).show());
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    runOnUiThread(() -> {
+                final String responseData = response.body() != null ? response.body().string() : "";
+                final int responseCode = response.code();
+
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
                         Toast.makeText(GroupSettingsActivity.this, "그룹 정보 수정 완료!", Toast.LENGTH_LONG).show();
-                    });
-                } else {
-                    Log.e("GroupActivity", "그룹 정보 수정 실패: " + response.code());
-                    runOnUiThread(() -> Toast.makeText(GroupSettingsActivity.this, "그룹 정보 수정 실패: " + response.code(), Toast.LENGTH_SHORT).show());
-                }
+                        Intent intent = new Intent(GroupSettingsActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Log.e("GroupSettingsActivity", "그룹 정보 수정 실패: 응답 코드 " + responseCode + ", 응답 본문: " + responseData); // 로그 태그 통일
+                        try {
+                            JSONObject errorJson = new JSONObject(responseData);
+                            String errorMessage = errorJson.optString("message", "알 수 없는 오류");
+                            Toast.makeText(GroupSettingsActivity.this, "그룹 정보 수정 실패: " + errorMessage, Toast.LENGTH_SHORT).show();
+                        } catch (JSONException e) {
+                            Log.e("GroupSettingsActivity", "그룹 정보 수정 응답 파싱 오류: " + e.getMessage());
+                            Toast.makeText(GroupSettingsActivity.this, "그룹 정보 수정 실패: " + responseCode, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
         });
     }
@@ -254,16 +333,15 @@ public class GroupSettingsActivity extends AppCompatActivity {
 
     private void sendOutRequest() {
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("group_id", groupId);
-            jsonObject.put("user_id", userId);
-
-            MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            RequestBody requestBody = RequestBody.create(jsonObject.toString(), JSON);
+            HttpUrl url = HttpUrl.parse(serverUrl + "/api/noise/groups/out")
+                    .newBuilder()
+                    .addQueryParameter("user_id", userId.trim())
+                    .addQueryParameter("group_id", groupId.trim())
+                    .build();
 
             Request request = new Request.Builder()
-                    .url(serverUrl + "/api/noise/groups/out")
-                    .post(requestBody)
+                    .url(url)
+                    .delete()
                     .build();
 
             client.newCall(request).enqueue(new Callback() {
@@ -278,6 +356,8 @@ public class GroupSettingsActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         if (response.isSuccessful()) {
                             Toast.makeText(GroupSettingsActivity.this, "그룹 퇴실 완료", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(GroupSettingsActivity.this, MainActivity.class);
+                            startActivity(intent);
                             finish();
                         } else {
                             Toast.makeText(GroupSettingsActivity.this, "퇴실 실패", Toast.LENGTH_SHORT).show();
@@ -292,9 +372,11 @@ public class GroupSettingsActivity extends AppCompatActivity {
     private void sendDeleteGroupRequest() {
         HttpUrl url = HttpUrl.parse(serverUrl + "/api/group/deleteGroup")
                 .newBuilder()
-                .addQueryParameter("userId", userId)
-                .addQueryParameter("groupId", groupId)
+                .addQueryParameter("user_id", userId)
+                .addQueryParameter("group_id", groupId)
                 .build();
+
+        Log.d("GroupSettingsActivity", "Final DELETE Request URL: " + url.toString());
 
         Request request = new Request.Builder()
                 .url(url)
@@ -313,7 +395,9 @@ public class GroupSettingsActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (response.isSuccessful()) {
                         Toast.makeText(GroupSettingsActivity.this, "그룹 삭제 완료", Toast.LENGTH_SHORT).show();
-                        finish(); // 설정 액티비티 종료
+                        Intent intent = new Intent(GroupSettingsActivity.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
                     } else {
                         Toast.makeText(GroupSettingsActivity.this, "삭제 실패", Toast.LENGTH_SHORT).show();
                     }

@@ -75,8 +75,12 @@ public class MainActivity extends AppCompatActivity {
         btnRecord.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) { // 새 창 RecodeActivity.java
-                Intent intent = new Intent(getApplicationContext(), RecodeActivity.class);
-                startActivity(intent);
+                if(isLoggedIn()){
+                    Intent intent = new Intent(getApplicationContext(), RecodeActivity.class);
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(MainActivity.this, "로그인 후 실행해주세요.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

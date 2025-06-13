@@ -261,7 +261,7 @@ public class GroupActivity extends AppCompatActivity {
         RequestBody requestBody = RequestBody.create(JSON, jsonBody.toString());
 
         Request request = new Request.Builder()
-                .url(serverUrl + "/groups/join/nickname")
+                .url(serverUrl + "/api/noise/groups/join/nickname")
                 .post(requestBody)
                 .build();
 
