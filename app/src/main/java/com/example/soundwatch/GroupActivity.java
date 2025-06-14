@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -254,6 +255,8 @@ public class GroupActivity extends AppCompatActivity {
             jsonBody.put("invite_code", inviteCode);
             jsonBody.put("user_id", userId);
             jsonBody.put("nickname", nickname);
+            // 서버 속성 변경 후 사용.
+            jsonBody.put("wifi_bssid", bssid);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류 (가입): " + e.getMessage());
             return;
@@ -275,29 +278,44 @@ public class GroupActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 final String responseData = response.body().string();
-                final int responseCode = response.code();
+                Log.d("GroupActivity", "서버 응답: " + responseData); // 서버 응답 전체 로그로 확인
 
-                WifiGroupUtil.sendHttp(GroupActivity.this, bssid);
-                runOnUiThread(() -> {
-                    if (response.isSuccessful()) {
-                        try {
-                            JSONObject jsonObject = new JSONObject(responseData);
-                            Toast.makeText(GroupActivity.this, "그룹 가입 완료!", Toast.LENGTH_LONG).show();
-                            fetchGroupsFromServer(); // 그룹 목록 다시 로드
-                        } catch (Exception e) {
-                            Log.e("GroupActivity", "그룹 가입 응답 파싱 오류: " + e.getMessage());
-                            Toast.makeText(GroupActivity.this, "데이터 파싱 오류", Toast.LENGTH_SHORT).show();
+                if (response.isSuccessful()) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(responseData);
+                        if (jsonObject.has("groupId")) { // groupId 키가 존재하는지 먼저 확인
+                            String groupId = jsonObject.getString("groupId");
+                            prefs.edit().putString("groupId", groupId).apply(); // 새 groupId 저장
+                            Log.d("GroupActivity", "groupId 저장 성공: " + groupId);
+                            // UI 업데이트 또는 다음 화면으로 전환 로직
+                            runOnUiThread(() -> Toast.makeText(GroupActivity.this, "그룹 가입 성공: " + response.code(), Toast.LENGTH_SHORT).show());
+                            finish(); // 액티비티 종료 또는 전환
+                        } else if (jsonObject.has("message")) {
+                            // groupId는 없지만 메시지는 있는 경우 (예: 이미 가입됨)
+                            String message = jsonObject.getString("message");
+                            Log.w("GroupActivity", "그룹 가입 성공 응답이지만 groupId 없음: " + message);
+                            runOnUiThread(() -> Toast.makeText(GroupActivity.this, "그룹 가입 성공 응답이지만 groupId 없음 " + response.code(), Toast.LENGTH_SHORT).show());
+                        } else {
+                            // 예상치 못한 성공 응답
+                            Log.e("GroupActivity", "예상치 못한 성공 응답 형식: " + responseData);
+                            runOnUiThread(() -> Toast.makeText(GroupActivity.this, "그룹 가입 처리 중 오류가 발생했습니다. " + response.code(), Toast.LENGTH_SHORT).show());
                         }
-                    } else {
-                        try {
-                            JSONObject jsonObject = new JSONObject(responseData);
-                            Toast.makeText(GroupActivity.this, jsonObject.getString("error"), Toast.LENGTH_SHORT).show();
-                        } catch (Exception e) {
-                            Log.e("group_join", e.getMessage());
-                            Toast.makeText(GroupActivity.this, "그룹 가입 실패: " + responseCode, Toast.LENGTH_SHORT).show();
-                        }
+                    } catch (JSONException e) {
+                        Log.e("GroupActivity", "그룹 가입 응답 파싱 오류: " + e.getMessage());
+                        runOnUiThread(() -> Toast.makeText(GroupActivity.this, "서버 응답 파싱 중 오류가 발생했습니다. " + response.code(), Toast.LENGTH_SHORT).show());
                     }
-                });
+                } else {
+                    // HTTP 응답 코드가 2xx가 아닌 경우 (예: 409 Conflict, 500 Internal Server Error)
+                    try {
+                        JSONObject errorJson = new JSONObject(responseData);
+                        String errorMessage = errorJson.optString("error", "알 수 없는 오류가 발생했습니다.");
+                        Log.e("GroupActivity", "그룹 가입 서버 오류 (" + response.code() + "): " + errorMessage);
+                        runOnUiThread(() -> Toast.makeText(GroupActivity.this, "그룹 가입 서버 오류  " + response.code(), Toast.LENGTH_SHORT).show());
+                    } catch (JSONException e) {
+                        Log.e("GroupActivity", "오류 응답 파싱 오류: " + e.getMessage());
+                        runOnUiThread(() -> Toast.makeText(GroupActivity.this, "오류 응답 파싱 오류 " + response.code(), Toast.LENGTH_SHORT).show());
+                    }
+                }
             }
         });
     }
