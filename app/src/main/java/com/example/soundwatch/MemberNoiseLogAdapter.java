@@ -40,9 +40,9 @@ public class MemberNoiseLogAdapter extends RecyclerView.Adapter<MemberNoiseLogAd
 
         if (member.isOnline()) {
             if (member.getNoise_level() != null) {
-                holder.decibelText.setText(String.format("%.1f dB", member.getNoise_level()));
+                holder.decibelText.setText(String.format("%.1f dB", member.getMax_db()));
 
-                if (member.getNoise_level() > warningDecibel) {
+                if (member.getMax_db() > warningDecibel) {
                     holder.statusImage.setImageResource(R.drawable.ic_noise);
                 } else {
                     holder.statusImage.setImageResource(R.drawable.ic_alive);

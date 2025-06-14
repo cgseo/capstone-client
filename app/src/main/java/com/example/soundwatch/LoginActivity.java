@@ -112,6 +112,8 @@ public class LoginActivity extends AppCompatActivity {
                             runOnUiThread(() -> {
                                 Toast.makeText(LoginActivity.this, "로그인 성공", Toast.LENGTH_SHORT).show();
 
+                                // 로그인 성공시 is_Online 상태 반전
+                                IsOnlineUtil.updateIsOnline(userId);
                                 WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                                 WifiInfo wifiInfo = wifiManager.getConnectionInfo();
                                 String bssid = wifiInfo.getBSSID();
@@ -136,4 +138,6 @@ public class LoginActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+
 }

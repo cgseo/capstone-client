@@ -96,10 +96,8 @@ public class GroupPageActivity extends AppCompatActivity {
                             for (int i = 0; i < array.length(); i++) {
                                 JSONObject obj = array.getJSONObject(i);
                                 MemberNoiseLog member = new MemberNoiseLog();
-
                                 member.setUser_id(obj.getString("user_id"));
                                 member.setNickname(obj.getString("nickname"));
-
                                 member.setOnline(obj.getInt("is_online") == 1);
 
                                 // noise_level과 max_db는 null일 수 있으므로 isNull 체크 후 가져온다.

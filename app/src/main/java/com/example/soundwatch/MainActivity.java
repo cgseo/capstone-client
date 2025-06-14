@@ -152,6 +152,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
+        String userId = prefs.getString("userId", null);
+        if (userId != null) {
+            // 로그아웃 시 is_online alter
+            IsOnlineUtil.updateIsOnline(userId);
+        }
         // SharedPreferences에서 userId 제거
         prefs.edit().remove("userId").apply();
         Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
@@ -214,4 +219,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }

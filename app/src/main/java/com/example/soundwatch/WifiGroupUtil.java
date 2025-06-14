@@ -19,6 +19,7 @@ public class WifiGroupUtil {
     public static void sendHttp(Context context, String bssid) {
         SharedPreferences prefs = context.getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         String userId = prefs.getString("userId", null);
+        Log.d("wifi_service", "Current userId: " + userId);
 
         // userId가 없으면(로그인이 안 되어 있으면) > 요청 ㄴ
         if(userId == null) {
@@ -40,6 +41,7 @@ public class WifiGroupUtil {
                     BufferedReader reader = new BufferedReader(
                             new InputStreamReader(conn.getInputStream()));
                     StringBuilder response = new StringBuilder();
+                    Log.d("wifi_service", "Server response: " + response.toString());
                     String line;
 
                     while ((line = reader.readLine()) != null) {
