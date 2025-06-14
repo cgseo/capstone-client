@@ -254,6 +254,7 @@ public class GroupActivity extends AppCompatActivity {
             jsonBody.put("invite_code", inviteCode);
             jsonBody.put("user_id", userId);
             jsonBody.put("nickname", nickname);
+            jsonBody.put("wifi_bssid", bssid);
         } catch (Exception e) {
             Log.e("GroupActivity", "JSON 생성 오류 (가입): " + e.getMessage());
             return;
