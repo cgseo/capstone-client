@@ -44,7 +44,7 @@ public interface NoiseLogApi {
     Call<Integer> saveNoiseLog(@Body NoiseLog noiseLog);
 
     @GET("/api/noise/byDate") //특정 날짜 데이터 조회
-        // userId 쿼리 파라미터 추가
+    // userId 쿼리 파라미터 추가
     Call<List<NoiseLog>> getNoiseLogsByDate(@Query("userId") String userId, @Query("date") String date);
 
     @GET("/api/noise/deleteOld") // 오래된 로그 삭제

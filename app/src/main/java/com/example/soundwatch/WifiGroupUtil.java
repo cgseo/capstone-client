@@ -29,7 +29,7 @@ public class WifiGroupUtil {
         }
         new Thread(() -> {
             try {
-                URL url = new URL("http://10.0.2.2:3000/api/group/getGroupIdByWifi?"
+                URL url = new URL("http://172.30.1.31:3000/api/group/getGroupIdByWifi?"
                         + "userId=" + userId
                         + "&wifiBssid=" + bssid);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -61,6 +61,9 @@ public class WifiGroupUtil {
                     JSONObject json = new JSONObject(response.toString());
                     String groupId = json.optString("group_id", null);  // int면 optInt 사용 가능
 
+                    if (groupId != null && groupId.equalsIgnoreCase("null")) {
+                        groupId = null; // Java null로 설정하여 SharedPreferences에 올바르게 저장되도록 함
+                    }
 
                     prefs.edit().putString("groupId", groupId).apply();
                     Log.d("wifi_service", "groupId: "+prefs.getString("groupId", null));

@@ -40,15 +40,29 @@
             android:src="@drawable/ic_settings" />
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-    <ImageView
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:id="@+id/imgNowSound"
-        android:layout_gravity="center"
-        android:layout_marginTop="60dp"
-        android:layout_marginBottom="50dp"
-        android:src="@drawable/decibel_main" />
+        <TextView
+            android:id="@+id/txtBroaddB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="0.0 dB"
+            android:textSize="30dp" />
+
+        <ImageView
+            android:id="@+id/imgNowSound"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="center"
+            android:src="@drawable/decibel_main" />
+    </LinearLayout>
+
+
+
     <Button
         android:layout_width="200dp"
         android:layout_height="60dp"

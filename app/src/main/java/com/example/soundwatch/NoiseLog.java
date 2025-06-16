@@ -4,27 +4,25 @@ import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 
-    public class NoiseLog {
-        private int id;
-        @SerializedName("noise_level")
-        private double noiseLevel;
-        @SerializedName("log_time")
-        private long logTime; // 현재 데시벨 측정 시간
-        @SerializedName("start_time")
-        private Timestamp startTime; // 측정 시작 시간
-        @SerializedName("end_time")
-        private Timestamp endTime; // 측정 종료 시간
-        private String location;
-        @SerializedName("max_db")
-        private double maxDb;
-        @SerializedName("user_id")
-        private int userId; // 사용자 ID 추가
+public class NoiseLog {
+    private int id;
+    @SerializedName("noise_level")
+    private double noiseLevel;
+    @SerializedName("log_time")
+    private long logTime; // 현재 데시벨 측정 시간
+    @SerializedName("start_time")
+    private Timestamp startTime; // 측정 시작 시간
+    @SerializedName("end_time")
+    private Timestamp endTime; // 측정 종료 시간
+    private String location;
+    @SerializedName("max_db")
+    private double maxDb;
+    @SerializedName("user_id")
+    private int userId; // 사용자 ID 추가
+    @SerializedName("group_id")
+    private String groupId; // 그룹 ID 추가
 
-        @SerializedName("group_id")
-        private String groupId; // 그룹 ID 추가
-
-
-        public int getId() {
+    public int getId() {
         return id;
     }
 

@@ -38,7 +38,7 @@ public class RecodeActivity extends AppCompatActivity {
     private TextView selectDateTextView; // 날짜 선택
     private LinearLayout dataContainer; // 로그들을 동적으로 표시
     private NoiseLogApi noiseLogApi; // 서버와 통신 인터페이스
-    private String userId; // 사요자 ID
+    private String userId; // 사용자 ID
     // 날짜 형식
     private SimpleDateFormat dateOnlyFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
@@ -96,6 +96,7 @@ public class RecodeActivity extends AppCompatActivity {
         }
 
         Call<List<NoiseLog>> call = noiseLogApi.getNoiseLogsByDate(userId, dateString);
+
         call.enqueue(new Callback<List<NoiseLog>>() {
             @Override
             public void onResponse(Call<List<NoiseLog>> call, Response<List<NoiseLog>> response) {
@@ -111,7 +112,6 @@ public class RecodeActivity extends AppCompatActivity {
                 showMessage("네트워크 오류: " + t.getMessage());
             }
         });
-
     }
 
     // 소음 측정 기록 열람

@@ -2,19 +2,33 @@ package com.example.soundwatch;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+
+
+import android.provider.Settings;
+
+
+
+import androidx.annotation.NonNull;
+import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -22,10 +36,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.Locale;
 
+public class MainActivity extends AppCompatActivity {
     private Button btnLogin;
     private SharedPreferences prefs;
+
+    //상단바 알림 위함
+    private static String CHANNEL_ID = "channel1";
+    private static String CHANNEL_NAME = "channel1";
+    NotificationManager manager;
+
+    //백그라운드에서 브로드캐스트로 보내는 측정 데시벨 값 받기 위함
+    private BroadcastReceiver decibelReceiver;
+    TextView txtBroaddB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnLogin = (Button) findViewById(R.id.btnLogin); // 로그인
+        createNotificationChannel(); //알림 위한 채널 생성
+        checkAudioPermission();
+
+        ImageButton btnSettings = (ImageButton) findViewById(R.id.btnSettings); //설정
         Button btnMeasure = (Button) findViewById(R.id.btnMeasure); //측정
         Button btnGroup = (Button) findViewById(R.id.btnGroup); //기록
         Button btnRecord = (Button) findViewById(R.id.btnRecord); //그룹
@@ -60,6 +88,16 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                     startActivity(intent);
                 }
+            }
+        });
+
+        txtBroaddB = (TextView) findViewById(R.id.txtBroaddB); //브로드캐스트 값 확인
+
+        btnSettings.setOnClickListener(new View.OnClickListener() { //설정
+            @Override
+            public void onClick(View view) { // 새 창 Settings.java
+                Intent intent = new Intent(getApplicationContext(), DecibelSettings.class);
+                startActivity(intent);
             }
         });
 
@@ -115,8 +153,43 @@ public class MainActivity extends AppCompatActivity {
             // 모든 권한 허용됨 → 서비스 시작
             startForegroundService();
         }
+
+        decibelReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d("MainActivity", "Broadcast received in MainActivity");
+
+                if ("com.example.soundwatch.ACTION_UPDATE_DECIBEL".equals(intent.getAction())) {
+                    double decibel = intent.getDoubleExtra("decibel", 0.0);
+                    Log.d("MainActivity", "Received decibel in activity: " + decibel);
+                    runOnUiThread(() -> {
+                        if (txtBroaddB != null) {
+                            txtBroaddB.setText(String.format(Locale.getDefault(), "%.2f dB", decibel));
+                        } else {
+                            Log.e("MainActivity", "txtBroaddB is null");
+                        }
+                    });
+                }
+            }
+        };
     }
 
+    private void createNotificationChannel() { //알림을 위한 채널 생성
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is not in the Support Library.
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("소음 알림");
+
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this.
+            manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onResume() {
         super.onResume();
@@ -132,6 +205,27 @@ public class MainActivity extends AppCompatActivity {
                             == PackageManager.PERMISSION_GRANTED) {
                 // 모든 권한 OK → 서비스 시작
                 startForegroundService();
+            }
+        }
+
+        Log.d("MainActivity", "onResume called, registering receiver");
+        IntentFilter filter = new IntentFilter("com.example.soundwatch.ACTION_UPDATE_DECIBEL");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(decibelReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(decibelReceiver, filter);
+        }
+
+        SharedPreferences backGroundprefs = getSharedPreferences("servicePrefer", MODE_PRIVATE);
+        boolean isRunning = backGroundprefs.getBoolean("service_running", false);
+
+        if (isRunning) {
+            Intent serviceIntent = new Intent(this, ForegroundService.class);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.startForegroundService(this, serviceIntent);
+            } else {
+                startService(serviceIntent);
             }
         }
     }
@@ -217,6 +311,25 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (decibelReceiver != null) {
+            unregisterReceiver(decibelReceiver);
+        }
+    }
+
+    private static final int REQUEST_RECORD_AUDIO_PERMISSION = 205;
+
+    private void checkAudioPermission() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{android.Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO_PERMISSION);
         }
     }
 

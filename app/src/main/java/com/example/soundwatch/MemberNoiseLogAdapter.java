@@ -35,8 +35,9 @@ public class MemberNoiseLogAdapter extends RecyclerView.Adapter<MemberNoiseLogAd
         MemberNoiseLog member = members.get(position);
         holder.nameText.setText(member.getNickname());
 
-        SharedPreferences prefs = context.getSharedPreferences("my_app_settings", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("SoundWatchPrefs", Context.MODE_PRIVATE);
         int warningDecibel = prefs.getInt("selectedDecibel", 30); // 저장된 경고 데시벨 값 불러오기, 값이 없으면 기본 값 30
+
 
         if (member.isOnline()) {
             if (member.getNoise_level() != null) {

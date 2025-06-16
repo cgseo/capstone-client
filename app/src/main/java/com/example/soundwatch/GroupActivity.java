@@ -37,7 +37,7 @@ public class GroupActivity extends AppCompatActivity {
     private GroupAdapter adapter;
     private ListView groupListView;
     private OkHttpClient client = new OkHttpClient();
-    private String serverUrl = "http://10.0.2.2:3000";
+    private String serverUrl = "http://172.30.1.31:3000";
     private SharedPreferences prefs;
 
     // wifi 연결 확인 기능 추가: 그룹 생성/가입 시 prefs의 group_id도 해당 그룹의 id로 변경

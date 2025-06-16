@@ -31,7 +31,7 @@ public class SignupActivity extends AppCompatActivity {
     private Button btnSignup;
     private TextView tvBackToLogin;
     private OkHttpClient client = new OkHttpClient();
-    private String serverUrl = "http://10.0.2.2:3000";
+    private String serverUrl = "http://172.30.1.31:3000";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
