@@ -40,7 +40,7 @@ public class GroupSettingsActivity extends AppCompatActivity {
     private String userId;
     private boolean is_Owner = false;
     private OkHttpClient client = new OkHttpClient();
-    private String serverUrl = "http://172.30.1.31:3000";
+    private String serverUrl = "http://10.0.2.2:3000";
     private Group group; // 그룹 정보
 
     private Button btnOut;

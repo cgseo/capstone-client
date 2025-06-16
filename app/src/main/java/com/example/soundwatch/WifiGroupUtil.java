@@ -29,7 +29,7 @@ public class WifiGroupUtil {
         }
         new Thread(() -> {
             try {
-                URL url = new URL("http://172.30.1.31:3000/api/group/getGroupIdByWifi?"
+                URL url = new URL("http://10.0.2.2:3000/api/group/getGroupIdByWifi?"
                         + "userId=" + userId
                         + "&wifiBssid=" + bssid);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();

@@ -42,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView tvSignup;
     private OkHttpClient client = new OkHttpClient();
-    private String serverUrl = "http://172.30.1.31:3000";
+    private String serverUrl = "http://10.0.2.2:3000";
     private SharedPreferences prefs;
 
     @Override

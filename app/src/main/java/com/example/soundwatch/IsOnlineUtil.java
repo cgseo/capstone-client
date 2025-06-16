@@ -18,7 +18,7 @@ import okhttp3.Response;
 public class IsOnlineUtil {
 
     private static final String TAG = "IsOnlineUtil";
-    private static final String BASE_SERVER_URL = "http://172.30.1.31:3000/api/noise/users/online";
+    private static final String BASE_SERVER_URL = "http://10.0.2.2:3000/api/noise/users/online";
     private static final OkHttpClient client = new OkHttpClient();
 
     public static void updateIsOnline(String userId) {
