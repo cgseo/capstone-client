@@ -20,8 +20,11 @@ import java.sql.Timestamp;
         @SerializedName("user_id")
         private int userId; // 사용자 ID 추가
 
+        @SerializedName("group_id")
+        private String groupId; // 그룹 ID 추가
 
-    public int getId() {
+
+        public int getId() {
         return id;
     }
 
@@ -81,6 +84,10 @@ import java.sql.Timestamp;
         this.userId = userId;
     }
 
+    public String getGroupId() {return groupId;}
+
+    public void setGroupId(String groupId) { this.groupId = groupId; }
+
     @Override
     public String toString() {
         return "NoiseLog{" +
@@ -92,6 +99,7 @@ import java.sql.Timestamp;
                 ", location='" + location + '\'' +
                 ", maxDb=" + maxDb +
                 ", userId=" + userId +
+                ", groupId=" + groupId +
                 '}';
     }
 }

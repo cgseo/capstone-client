@@ -4,12 +4,20 @@ public class Group {
 
     private String id;
     private String group_name;
+    private String created_at;
     private String description;
     private String invite_code;
 
     public Group(String id, String group_name, String description, String invite_code) {
         this.id = id;
         this.group_name = group_name;
+        this.description = description;
+        this.invite_code = invite_code;
+    }
+    public Group(String id, String group_name, String created_at, String description, String invite_code) {
+        this.id = id;
+        this.group_name = group_name;
+        this.created_at =  created_at;
         this.description = description;
         this.invite_code = invite_code;
     }

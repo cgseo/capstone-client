@@ -1,15 +1,23 @@
 package com.example.soundwatch;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -67,8 +75,12 @@ public class MainActivity extends AppCompatActivity {
         btnRecord.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) { // 새 창 RecodeActivity.java
-                Intent intent = new Intent(getApplicationContext(), RecodeActivity.class);
-                startActivity(intent);
+                if(isLoggedIn()){
+                    Intent intent = new Intent(getApplicationContext(), RecodeActivity.class);
+                    startActivity(intent);
+                }else{
+                    Toast.makeText(MainActivity.this, "로그인 후 실행해주세요.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -83,6 +95,26 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        // wifi 연결을 확인하여 group_id를 세팅하는 ForegroundService 실행
+        // android 10 이상부터 ACCESS_BACKGROUND_LOCATION 권한 요청 해야하기 때문에 나눠서 진행
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // 먼저 FINE_LOCATION만 요청
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            }, 1001);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+            // FINE은 이미 허용됨 → BACKGROUND 따로 요청
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            }, 1002);
+        } else {
+            // 모든 권한 허용됨 → 서비스 시작
+            startForegroundService();
+        }
     }
 
     @Override
@@ -90,6 +122,18 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // MainActivity가 다시 활성화될 때마다 로그인 상태 업데이트
         updateLoginButtonState();
+
+        // 앱 설정에서 돌아왔을 때 권한 확인
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                // 모든 권한 OK → 서비스 시작
+                startForegroundService();
+            }
+        }
     }
 
     private void updateLoginButtonState() {
@@ -108,10 +152,72 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void performLogout() {
+        String userId = prefs.getString("userId", null);
+        if (userId != null) {
+            // 로그아웃 시 is_online alter
+            IsOnlineUtil.updateIsOnline(userId);
+        }
         // SharedPreferences에서 userId 제거
         prefs.edit().remove("userId").apply();
         Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
         // 로그아웃 후 버튼 상태 업데이트
         updateLoginButtonState();
     }
+
+    private void startForegroundService() {
+        Intent serviceIntent = new Intent(this, WifiForegroundService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+    }
+
+    private void checkAndRequestLocationPermissions() {
+        // FINE_LOCATION 권한 확인
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    1001);
+
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+            // BACKGROUND 권한이 필요한데, Android 10+ 이고 아직 허용 안 됐으면
+            goToAppSettingsForBackgroundLocation();
+        } else {
+            // 모든 권한 OK → 서비스 시작
+            startForegroundService();
+        }
+    }
+
+    private void goToAppSettingsForBackgroundLocation() {
+        Toast.makeText(this, "설정에서 위치 권한을 '항상 허용'으로 바꿔주세요.", Toast.LENGTH_LONG).show();
+
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // FINE_LOCATION 허용됨 → BACKGROUND 확인
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                != PackageManager.PERMISSION_GRANTED) {
+                    goToAppSettingsForBackgroundLocation();
+                } else {
+                    startForegroundService();
+                }
+            } else {
+                Toast.makeText(this, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 }

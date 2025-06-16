@@ -44,13 +44,12 @@ public interface NoiseLogApi {
     Call<Integer> saveNoiseLog(@Body NoiseLog noiseLog);
 
     @GET("/api/noise/byDate") //특정 날짜 데이터 조회
-    Call<List<NoiseLog>> getNoiseLogsByDate(@Query("date") String date);
+        // userId 쿼리 파라미터 추가
+    Call<List<NoiseLog>> getNoiseLogsByDate(@Query("userId") String userId, @Query("date") String date);
 
     @GET("/api/noise/deleteOld") // 오래된 로그 삭제
     Call<Integer> deleteOldLogs();
 
-    //@DELETE("noiselogs/{id}") // 데이터 삭제
-    //Call<Void> deleteNoiseLog(@Path("id") int id);
     @DELETE("/api/noise/delete") // 데이터 삭제
     Call<Void> deleteNoiseLog(@Query("id") int id);
 }

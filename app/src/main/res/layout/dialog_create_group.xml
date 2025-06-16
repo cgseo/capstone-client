@@ -46,4 +46,20 @@
         android:layout_height="wrap_content"
         android:hint="" />
 
+    <!-- 가입할 wifi 확인-->
+    <TextView
+        android:id="@+id/textWifiName"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
+        android:textSize="20dp"
+        android:text="현재 Wi-Fi: "/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textAlignment="center"
+        android:textSize="15dp"
+        android:text="현재 Wi-Fi에 연결된 상태에서 측정되는 소음은,\n 이 그룹의 위치에서 발생한 것으로 저장됩니다."/>
+
 </LinearLayout>
